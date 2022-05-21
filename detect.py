@@ -112,6 +112,11 @@ class SpotipyApp:
     ):
         self.sp.next_track()
 
+    def handle_previous_song(
+        self,
+    ):
+        self.sp.previous_track()
+
     def handle_set_volume(
         self,
     ):
@@ -168,6 +173,23 @@ class SpotipyApp:
         self.sp.add_to_queue(song_url)
         self.sp.next_track()
 
+    def handle_similar_artist(
+        self,
+    ):
+        current_track = self.sp.currently_playing()
+        if current_track == None:
+            print("CURRENTLY PLAYING: None")
+        else:
+            artists = [artist for artist in current_track['item']['artists']]
+            artist_ID = artists[0]['id']
+            similar_artists = self.sp.artist_related_artists(artist_ID)['artists']
+            idx = numpy.random.randint(0, len(similar_artists))
+            similar_track = self.sp.artist_top_tracks(similar_artists[idx]['id'], country='US')['tracks']
+            idx = numpy.random.randint(0, len(similar_track))
+
+            self.sp.add_to_queue(similar_track[idx]['id'])
+            self.sp.next_track()
+
     def handle_start(
         self,
     ):
@@ -196,6 +218,10 @@ class SpotipyApp:
                     self.handle_start()
                 elif any(x in tokens for x in ["stop", "pause"]):
                     self.handle_stop()
+                elif all(x in tokens for x in ["like", "this"]):
+                    self.handle_similar_artist()
+                elif all(x in tokens for x in ["artist"]):
+                    self.handle_similar_artist()
                 elif all(
                     x in tokens for x in ["start", "playing", "by", "the", "artist"]
                 ):
@@ -212,6 +238,10 @@ class SpotipyApp:
                     self.handle_set_volume()
                 elif all(x in tokens for x in ["play", "next", "song"]):
                     self.handle_next_song()
+                elif all(x in tokens for x in ["next"]):
+                    self.handle_next_song()
+                elif any(x in tokens for x in ["previous", "back", "last"]):
+                    self.handle_previous_song()
 
             except sr.UnknownValueError:
                 pass
