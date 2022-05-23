@@ -11,3 +11,7 @@ pip install pywinauto
 pip install pipwin
 pipwin install pyaudio
 ```
+
+## Data
+
+Data used to create recommedations: https://www.kaggle.com/datasets/zaheenhamidani/ultimate-spotify-tracks-db
