@@ -5,9 +5,7 @@ import pandas as pd
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import numpy
-import spotipy.util as util
 
-from dotenv import load_dotenv
 from sklearn.metrics.pairwise import cosine_similarity
 from random import randint
 
@@ -51,12 +49,6 @@ def levenshteinDistanceDP(token1, token2):
 
 
 class SpotipyApp:
-    load_dotenv()
-
-    SPOTIPY_CLIENT_ID = os.environ.get("CLIENT_ID")
-    SPOTIPY_CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
-    SPOTIPY_REDIRECT_URI = 'http://localhost:8080/callback'
-
     scope = [
         "user-read-playback-state",
         "user-modify-playback-state",
