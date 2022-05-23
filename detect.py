@@ -1,6 +1,5 @@
 import speech_recognition as sr
 
-import os
 import pandas as pd
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
@@ -83,7 +82,7 @@ class SpotipyApp:
     def __init__(
         self,
     ):
-        self.sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=self.scope, client_id=self.SPOTIPY_CLIENT_ID, client_secret=self.SPOTIPY_CLIENT_SECRET, redirect_uri=self.SPOTIPY_REDIRECT_URI, cache_path='./tokens.txt'))
+        self.sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=self.scope))
         self.recognizer = sr.Recognizer()
         self.microphone = sr.Microphone()
 
