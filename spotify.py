@@ -17,7 +17,7 @@ token = util.prompt_for_user_token(
     scope,
     client_id=CLIENT_ID,
     client_secret=CLIENT_SECRET,
-    redirect_uri='http://localhost:4040/callback'
+    redirect_uri='http://localhost:8080/callback'
 )
 spotify = spotipy.Spotify(auth=token)
 playlist_dic = {}
