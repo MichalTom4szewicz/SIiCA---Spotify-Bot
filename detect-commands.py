@@ -64,8 +64,11 @@ def listen(sp):
     
 def read(sp):
     while True:
-        tokens = input("Insert commend: ")
-        sp.handle_commends(sp, tokens)
+        tokens = input("Insert command: ")
+        try:
+            sp.handle_commands(sp, tokens)
+        except:
+            pass
 
 class SpotipyApp:
     scope = [
@@ -340,7 +343,7 @@ class SpotipyApp:
         self.sp.add_to_queue(song_url)
         self.sp.next_track()
 
-    def handle_commends(self, temp, tokens):
+    def handle_commands(self, temp, tokens):
         if any(x in tokens for x in ["play", "start"]) and len(tokens) < 3:
             self.handle_start()
         elif any(x in tokens for x in ["stop", "pause"]):
