@@ -1,10 +1,13 @@
 import speech_recognition as sr
 
+import os
 import pandas as pd
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import numpy
+import spotipy.util as util
 
+from dotenv import load_dotenv
 from sklearn.metrics.pairwise import cosine_similarity
 from random import randint
 
@@ -48,6 +51,12 @@ def levenshteinDistanceDP(token1, token2):
 
 
 class SpotipyApp:
+    load_dotenv()
+
+    SPOTIPY_CLIENT_ID = os.environ.get("CLIENT_ID")
+    SPOTIPY_CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
+    SPOTIPY_REDIRECT_URI = 'http://localhost:8080/callback'
+
     scope = [
         "user-read-playback-state",
         "user-modify-playback-state",
@@ -82,7 +91,7 @@ class SpotipyApp:
     def __init__(
         self,
     ):
-        self.sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=self.scope))
+        self.sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=self.scope, client_id=self.SPOTIPY_CLIENT_ID, client_secret=self.SPOTIPY_CLIENT_SECRET, redirect_uri=self.SPOTIPY_REDIRECT_URI))
         self.recognizer = sr.Recognizer()
         self.microphone = sr.Microphone()
 
@@ -343,7 +352,7 @@ class SpotipyApp:
                     self.handle_similar_artist()
                 elif all(x in tokens for x in ["start", "playing", "by", "the", "artist"]):
                     self.handle_search_and_play_artist()
-                elif all(x in tokens for x in ["start", "playing",]):
+                elif all(x in tokens for x in ["start", "playing"]):
                     self.handle_search_and_play()
                 elif all(x in tokens for x in ["artist"]):
                     self.handle_similar_artist()
@@ -371,3 +380,4 @@ class SpotipyApp:
 if __name__ == "__main__":
 
     SpotipyApp()
+

@@ -1,14 +1,16 @@
 import speech_recognition as sr
 
+import os
 import pandas as pd
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import numpy
+import spotipy.util as util
 import threading
 
+from dotenv import load_dotenv
 from sklearn.metrics.pairwise import cosine_similarity
 from random import randint
-
 
 """
 run with command, set env variables
@@ -48,29 +50,13 @@ def levenshteinDistanceDP(token1, token2):
     # printDistances(distances, len(token1), len(token2))
     return distances[len(token1)][len(token2)]
 
-def listen(sp):
-    print("You can talk now")
-    while True:
-        with sp.microphone as source:
-            sp.recognizer.adjust_for_ambient_noise(source)
-            audio = sp.recognizer.listen(source)
-        try:
-            sp.text = sp.recognizer.recognize_google(audio)
-            print(sp.text)
-            tokens = sp.text.split(" ")
-            sp.handle_commends(sp, tokens)
-        except sr.UnknownValueError:
-            pass
-    
-def read(sp):
-    while True:
-        tokens = input("Insert command: ")
-        try:
-            sp.handle_commands(sp, tokens)
-        except:
-            pass
-
 class SpotipyApp:
+    load_dotenv()
+
+    SPOTIPY_CLIENT_ID = os.environ.get("CLIENT_ID")
+    SPOTIPY_CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
+    SPOTIPY_REDIRECT_URI = 'http://localhost:8080/callback'
+
     scope = [
         "user-read-playback-state",
         "user-modify-playback-state",
@@ -105,7 +91,8 @@ class SpotipyApp:
     def __init__(
         self,
     ):
-        self.sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=self.scope))
+        self.sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=self.scope, client_id=self.SPOTIPY_CLIENT_ID, client_secret=self.SPOTIPY_CLIENT_SECRET, redirect_uri=self.SPOTIPY_REDIRECT_URI))
+        # self.sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=self.scope))
         self.recognizer = sr.Recognizer()
         self.microphone = sr.Microphone()
 
@@ -157,17 +144,17 @@ class SpotipyApp:
         self.sp.previous_track()
 
     def handle_set_volume(
-        self,
+        self, text
     ):
-        tokens = self.text.split(" ")
+        tokens = text.split(" ")
         for token in tokens:
             if "%" in token:
                 number = int(token[:-1])
                 self.sp.volume(number)
                 break
 
-    def handle_search_and_play(self):
-        tokens = self.text.split(" ")
+    def handle_search_and_play(self, text):
+        tokens = text.split(" ")
 
         idx = tokens.index("playing") + 1
         title = tokens[idx:]
@@ -185,11 +172,11 @@ class SpotipyApp:
         self.sp.next_track()
 
     def handle_search_and_play_artist(
-        self,
+        self, text
     ):
-        tokens = self.text.split(" ")
+        tokens = text.split(" ")
 
-        if "by the artist" in self.text:
+        if "by the artist" in text:
             idx_end = tokens.index("by")
             idx_artist = tokens.index("artist") + 1
 
@@ -343,21 +330,23 @@ class SpotipyApp:
         self.sp.add_to_queue(song_url)
         self.sp.next_track()
 
-    def handle_commands(self, temp, tokens):
-        if any(x in tokens for x in ["play", "start"]) and len(tokens) < 3:
+    def handle_commands(
+        self, tokens
+    ):
+        if any(x in tokens for x in ["play", "start"]) and len(tokens) <= 5:
             self.handle_start()
         elif any(x in tokens for x in ["stop", "pause"]):
             self.handle_stop()
         elif all(x in tokens for x in ["start", "playing", "by", "the", "artist"]):
-            self.handle_search_and_play_artist()
+            self.handle_search_and_play_artist(tokens)
         elif all(x in tokens for x in ["start", "playing",]):
-            self.handle_search_and_play()
+            self.handle_search_and_play(tokens)
         elif all(x in tokens for x in ["like", "this"]):
             self.handle_similar_artist()
         elif all(x in tokens for x in ["artist"]):
             self.handle_similar_artist()
         elif all(x in tokens for x in ["set", "volume", "to"]):
-            self.handle_set_volume()
+            self.handle_set_volume(tokens)
         elif all(x in tokens for x in ["play", "next", "song"]):
             self.handle_next_song()
         elif all(x in tokens for x in ["next"]):
@@ -372,14 +361,43 @@ class SpotipyApp:
         elif all(x in tokens for x in ["recommend", "based", "on", "this", "playlist"]):
             playlist_vector, nonplaylist_df = self.generate_playlist_vector(self.generate_playlist_df())
             self.generate_recommendation(self.spotify_data, playlist_vector, nonplaylist_df)
+        print("Start talking or insert command: ")
+
+    def listen(
+        self,
+    ):
+        # print("You can talk now")
+        while True:
+            with self.microphone as source:
+                self.recognizer.adjust_for_ambient_noise(source)
+                audio = self.recognizer.listen(source)
+            try:
+                self.text = self.recognizer.recognize_google(audio)
+                print(self.text)
+                # tokens = self.text.split(" ")
+                self.handle_commands(self.text)
+            except sr.UnknownValueError:
+                pass
+
+    def read(
+        self,
+    ):
+        while True:
+            # print("Start talking or insert command: ")
+            tokens = input()
+            try:
+                self.handle_commands(tokens)
+            except:
+                pass
 
     def app_loop(
         self,
     ):
-        t1 = threading.Thread(target=listen, args=(self,))
+        t1 = threading.Thread(target=self.listen)
         t1.start()
-        t2 = threading.Thread(target=read, args=(self,))
+        t2 = threading.Thread(target=self.read)
         t2.start()
+        print("Start talking or insert command: ")
 
 
 if __name__ == "__main__":

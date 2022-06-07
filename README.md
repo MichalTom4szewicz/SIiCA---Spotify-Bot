@@ -14,4 +14,4 @@ pipwin install pyaudio
 
 ## Data
 
-Data used to create recommedations: https://www.kaggle.com/datasets/zaheenhamidani/ultimate-spotify-tracks-db
+Data used to create recommedations: <https://www.kaggle.com/datasets/zaheenhamidani/ultimate-spotify-tracks-db>
